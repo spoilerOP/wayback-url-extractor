@@ -9,8 +9,20 @@ The **Wayback URL Extractor** is a simple Python tool that allows you to extract
 
 ## Prerequisites
 - Python 3.x
-- `requests` module (to install it, use `pip install requests`)
+sudo apt install python3-venv
 
+## Create a virtual environment in the project directory:
+
+bash
+Copy code
+python3 -m venv venv
+
+## Activate the virtual environment:
+
+bash
+Copy code
+source venv/bin/activate 
+- `requests` module (to install it, use `pip install requests`)
 ## Installation
 
 1. **Clone the repository:**
