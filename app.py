@@ -1,37 +1,50 @@
 import requests
 import argparse
-from utils import export_to_file
+import json
+import re
 
-def get_wayback_urls(url):
-    wayback_url = f"https://web.archive.org/cdx/search/cdx?url={url}&output=text&fl=original&collapse=urlkey"
+def get_wayback_urls(url, output_file):
+    # Define the Wayback Machine URL
+    wayback_url = f"http://archive.org/wayback/available?url={url}"
+
+    # Send a request to Wayback Machine to check for available snapshots
     response = requests.get(wayback_url)
     
+    # Check if the response is successful
     if response.status_code == 200:
-        urls = response.text.splitlines()
-        return urls
+        data = response.json()
+
+        # Check if there are any available snapshots
+        if "archived_snapshots" in data and "closest" in data["archived_snapshots"]:
+            print(f"Found snapshots for: {url}")
+
+            # Extract URLs from the snapshots
+            snapshot_url = data["archived_snapshots"]["closest"]["url"]
+            print(f"Snapshot URL: {snapshot_url}")
+
+            # Save the snapshot URL to the output file
+            with open(output_file, "w") as file:
+                file.write(f"Snapshot URL: {snapshot_url}\n")
+
+        else:
+            print(f"No snapshots found for: {url}")
+            with open(output_file, "w") as file:
+                file.write("No snapshots found.\n")
+
     else:
-        return None
+        print(f"Error: Could not retrieve data from Wayback Machine for {url}")
+        with open(output_file, "w") as file:
+            file.write(f"Error retrieving data from Wayback Machine for {url}\n")
 
 def main():
-    parser = argparse.ArgumentParser(description='Wayback Machine URL Extractor')
-    parser.add_argument('--url', required=True, help='The URL pattern (e.g., "*.example.com/*")')
-    parser.add_argument('--output', help='Output file to save the results')
+    parser = argparse.ArgumentParser(description="Wayback URL Extractor")
+    parser.add_argument('--url', type=str, required=True, help="The URL to search in the Wayback Machine.")
+    parser.add_argument('--output', type=str, required=True, help="The output file to save the results.")
     
     args = parser.parse_args()
-    
-    urls = get_wayback_urls(args.url)
-    
-    if urls:
-        print(f"Found {len(urls)} archived URLs for {args.url}:\n")
-        for u in urls:
-            print(u)
-        
-        # If output file is specified, export results to file
-        if args.output:
-            export_to_file(urls, args.output)
-            print(f"\nURLs saved to {args.output}")
-    else:
-        print("No URLs found or an error occurred.")
+
+    # Call the function to get URLs from Wayback Machine
+    get_wayback_urls(args.url, args.output)
 
 if __name__ == "__main__":
     main()
